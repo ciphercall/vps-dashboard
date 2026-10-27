@@ -108,6 +108,43 @@ function parseLine(line: string): ParsedLine | null {
   };
 }
 
+// Docker json-file log envelope parser. Docker writes each line as
+// {"log":"...","stream":"stdout","time":"..."} where the inner "log" is the
+// container's own stdout (here nginx access lines in a custom format).
+function unwrapDockerLog(line: string): { inner: string; ts: number | null } | null {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith('{')) return null;
+  try {
+    const obj = JSON.parse(trimmed);
+    if (typeof obj?.log !== 'string') return null;
+    const ts = typeof obj.time === 'string' ? Date.parse(obj.time) : NaN;
+    return { inner: String(obj.log).replace(/\r?\n$/, ''), ts: Number.isNaN(ts) ? null : ts };
+  } catch {
+    return null;
+  }
+}
+
+// Parse the gazi-portfolio nginx custom access format:
+//   <ip> - <status> "METHOD PATH HTTP/x" ...
+function parseDockerInner(inner: string): ParsedLine | null {
+  // Try standard combined/common first (some containers log that).
+  const std = parseLine(inner);
+  if (std) return std;
+  const m = inner.match(/^(\S+)\s+-\s+(\d{3})\s+"(\S+)\s+(\S+)(?:\s+[^"]*)?"/);
+  if (!m) return null;
+  const ip = m[1];
+  const status = parseInt(m[2], 10);
+  const method = m[3];
+  const p = m[4];
+  return {
+    ip,
+    ts: Date.now(),
+    method,
+    path: p || '/',
+    status: Number.isNaN(status) ? 0 : status,
+    userAgent: null,
+  };
+}
 function countryInfo(code: string | null): { code: string | null; name: string | null } {
   if (!code) return { code: null, name: null };
   let name: string | null = null;
@@ -202,8 +239,17 @@ export async function tailLog(projectId: string, filePath: string): Promise<numb
   for (const raw of completeLines) {
     const line = raw.replace(/\r$/, '');
     if (!line.trim()) continue;
-    const parsed = parseLine(line);
+    let parsed = parseLine(line);
+    let tsOverride: number | null = null;
+    if (!parsed) {
+      const unwrapped = unwrapDockerLog(line);
+      if (unwrapped) {
+        parsed = parseDockerInner(unwrapped.inner);
+        tsOverride = unwrapped.ts;
+      }
+    }
     if (!parsed) continue;
+    if (tsOverride !== null) parsed.ts = tsOverride;
     const geo = lookupCountry(parsed.ip);
     visits.push({
       project_id: projectId,
@@ -218,7 +264,17 @@ export async function tailLog(projectId: string, filePath: string): Promise<numb
   }
 
   if (visits.length) {
-    insertVisits(visits);
+    try {
+      insertVisits(visits);
+      // eslint-disable-next-line no-console
+      console.log('[ingest] inserted', visits.length, 'visits from', filePath);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[ingest] insert failed:', e);
+    }
+  } else {
+    // eslint-disable-next-line no-console
+    console.log('[ingest] no visits parsed from', filePath, 'lines:', completeLines.length);
   }
 
   const newOffset = offset + Math.max(consumed, 0);

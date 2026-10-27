@@ -10,7 +10,7 @@
 		ip?: string;
 		os?: string;
 		cpuCores?: number;
-		ram?: string;
+		ramBytes?: number;
 		disk?: string;
 		region?: string;
 		provider?: string;
@@ -24,7 +24,7 @@
 		cpuPercent?: number;
 		memory?: { used?: number; total?: number; percent?: number };
 		mem?: { used?: number; total?: number; percent?: number };
-		disk?: { used?: number; total?: number; percent?: number };
+		disk?: { used?: number; total?: number; percent?: number; size?: number }[];
 		fs?: { used?: number; total?: number; percent?: number };
 	};
 
@@ -75,7 +75,7 @@
 		metrics?.memory?.percent ?? metrics?.mem?.percent ?? 0
 	);
 	const diskPercent = $derived(
-		metrics?.disk?.percent ?? metrics?.fs?.percent ?? 0
+		metrics?.disk?.[0]?.percent ?? metrics?.fs?.percent ?? 0
 	);
 
 	function formatUptime(sec?: number) {

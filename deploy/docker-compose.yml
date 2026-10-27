@@ -16,7 +16,7 @@ services:
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASS=${ADMIN_PASS}
       - SESSION_SECRET=${SESSION_SECRET}
-      - PROJECTS_CONFIG=/app/config/projects.json
+      - PROJECTS_CONFIG=/host/github/vps-dashboard/config/projects.json
       - DB_PATH=/data/dashboard.db
     volumes:
       - /proc:/host/proc:ro

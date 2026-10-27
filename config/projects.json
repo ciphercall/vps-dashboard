@@ -8,7 +8,9 @@
       "baseUrl": "http://127.0.0.1:8023",
       "adminToken": "vps-admin-token-change-me"
     },
-    "logSources": []
+    "logSources": [
+      "/host/root/var/lib/docker/containers/8aa73eeab3302e958e13ee4bc395a49eec2690d2a278bb80342c6147166647ff/8aa73eeab3302e958e13ee4bc395a49eec2690d2a278bb80342c6147166647ff-json.log"
+    ]
   },
   {
     "id": "dropshipbd",
