@@ -1,0 +1,30 @@
+services:
+  dashboard:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: vps-dashboard
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=8030
+      - HOST_PROC=/host/proc
+      - HOST_SYS=/host/sys
+      - HOST_FS=/host/root
+      - VPS_IP=169.58.90.13
+      - ADMIN_USER=${ADMIN_USER}
+      - ADMIN_PASS=${ADMIN_PASS}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - PROJECTS_CONFIG=/app/config/projects.json
+      - DB_PATH=/data/dashboard.db
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log:/host/log:ro
+      - /opt/github:/host/github:ro
+      - dashboard-data:/data
+volumes:
+  dashboard-data:

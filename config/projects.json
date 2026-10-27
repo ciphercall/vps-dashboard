@@ -1,0 +1,32 @@
+[
+  {
+    "id": "gazi-portfolio",
+    "name": "Gazi Portfolio",
+    "publicUrl": "http://169.58.90.13:8023",
+    "healthUrl": "http://127.0.0.1:8026/api/health",
+    "gatekeeper": {
+      "baseUrl": "http://127.0.0.1:8023",
+      "adminToken": "vps-admin-token-change-me"
+    },
+    "logSources": []
+  },
+  {
+    "id": "dropshipbd",
+    "name": "DropshipBD",
+    "publicUrl": "http://169.58.90.13:8024",
+    "healthUrl": "http://127.0.0.1:8024/healthz",
+    "gatekeeper": null,
+    "logSources": []
+  },
+  {
+    "id": "ai-invoice",
+    "name": "AI Invoice PO Matching",
+    "publicUrl": "http://169.58.90.13:5174",
+    "healthUrl": "http://127.0.0.1:8080/up",
+    "gatekeeper": {
+      "baseUrl": "http://127.0.0.1:5174",
+      "adminToken": "vps-admin-token-change-me"
+    },
+    "logSources": []
+  }
+]
