@@ -20,7 +20,7 @@
 	};
 
 	type Metrics = {
-		cpu?: number;
+		cpu?: { load?: number; cores?: number; usage?: number; perCore?: number[] };
 		cpuPercent?: number;
 		memory?: { used?: number; total?: number; percent?: number };
 		mem?: { used?: number; total?: number; percent?: number };
@@ -69,7 +69,7 @@
 	});
 
 	const cpuPercent = $derived(
-		metrics?.cpuPercent ?? metrics?.cpu ?? 0
+		metrics?.cpu?.usage ?? metrics?.cpu?.load ?? 0
 	);
 	const memPercent = $derived(
 		metrics?.memory?.percent ?? metrics?.mem?.percent ?? 0
