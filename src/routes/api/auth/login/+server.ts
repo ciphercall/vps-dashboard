@@ -30,13 +30,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		const token = signSession(username);
-		const isHttps = request.url.startsWith('https:') ||
-			request.headers.get('x-forwarded-proto') === 'https';
 		cookies.set(SESSION_COOKIE_NAME, token, {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',
-			secure: isHttps,
+			secure: false,
 			maxAge: 7 * 24 * 60 * 60
 		});
 
