@@ -39,7 +39,11 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
     "id": "dropshipbd",
     "name": "DropshipBD",
     "publicUrl": "http://169.58.90.13:8024",
-    "healthUrl": "http://127.0.0.1:8024/healthz",
+    "healthUrl": "http://127.0.0.1:8025/api/v1/health",
+    "gatekeeper": {
+      "baseUrl": "http://127.0.0.1:8024",
+      "adminToken": "vps-admin-token-change-me"
+    },
     "logSources": [
       "/host/log/dropship/access.log"
     ]

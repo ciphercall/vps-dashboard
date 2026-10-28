@@ -16,9 +16,14 @@
     "id": "dropshipbd",
     "name": "DropshipBD",
     "publicUrl": "http://169.58.90.13:8024",
-    "healthUrl": "http://127.0.0.1:8024/healthz",
-    "gatekeeper": null,
-    "logSources": []
+    "healthUrl": "http://127.0.0.1:8025/api/v1/health",
+    "gatekeeper": {
+      "baseUrl": "http://127.0.0.1:8024",
+      "adminToken": "vps-admin-token-change-me"
+    },
+    "logSources": [
+      "/host/log/dropship/access.log"
+    ]
   },
   {
     "id": "ai-invoice",
