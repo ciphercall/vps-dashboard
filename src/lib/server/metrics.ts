@@ -40,9 +40,11 @@ async function collectMetrics(): Promise<Metrics> {
   try {
     const m = await si.mem();
     memTotal = m.total ?? 0;
-    memUsed = m.used ?? 0;
     memFree = m.free ?? 0;
     memAvailable = m.available ?? m.free ?? 0;
+    // Report active memory (excludes OS page cache/buffers) so the gauge
+    // reflects real pressure; containers being "asleep" doesn't drop the cache.
+    memUsed = Math.max(0, memTotal - memAvailable);
   } catch {
     const t = os.totalmem();
     const f = os.freemem();

@@ -66,6 +66,12 @@ containerised process can observe the host:
 `metrics.ts` samples every 5 s and keeps the last sample in memory; API requests return the
 cached sample and trigger a background refresh. This keeps API p95 under 100 ms.
 
+Memory is reported as **active** memory (`total − available`), not cache-inclusive `used`.
+On Linux `used = total − free` includes OS page cache/buffers, which the kernel keeps after
+containers stop, so reporting it inflated the gauge (e.g. 95% while `available` was ~10 GB).
+`used`/`percent` therefore reflect real pressure; `available` and `free` are still exposed for
+diagnostics. CPU and disk are unchanged.
+
 ## Visitor ingestion
 
 A singleton tailer started in `hooks.server.ts` runs every 30 s. For each configured
