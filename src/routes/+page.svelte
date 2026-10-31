@@ -3,6 +3,7 @@
 	import { Activity, Cpu, Database, HardDrive, MemoryStick, RefreshCw, Server, Wifi } from 'lucide-svelte';
 	import Gauge from '$lib/components/Gauge.svelte';
 	import ProjectRow from '$lib/components/ProjectRow.svelte';
+	import BuildProgress from '$lib/components/BuildProgress.svelte';
 	import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 	type VpsInfo = {
@@ -31,6 +32,7 @@
 	let vps = $state<VpsInfo | null>(null);
 	let metrics = $state<Metrics | null>(null);
 	let projects = $state<any[]>([]);
+	let selectedProjectId = $state<string | null>(null);
 
 	let loading = $state(true);
 	let refreshing = $state(false);
@@ -66,6 +68,12 @@
 		loadAll(true);
 		const id = setInterval(() => loadAll(false), 10000);
 		return () => clearInterval(id);
+	});
+
+	$effect(() => {
+		if (!selectedProjectId && projects.length > 0) {
+			selectedProjectId = projects[0].id;
+		}
 	});
 
 	const cpuPercent = $derived(
@@ -238,44 +246,59 @@
 	</div>
 </section>
 
-<!-- Projects -->
-<section class="glass rounded-2xl p-5">
-	<div class="mb-4 flex items-center justify-between">
-		<div class="flex items-center gap-2">
-			<Database class="h-5 w-5 text-cyan-400" />
-			<h2 class="text-base font-bold text-slate-100">Deployed Projects</h2>
+<!-- Projects + build progress -->
+<section class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+	<div class="glass rounded-2xl p-5 lg:col-span-2">
+		<div class="mb-4 flex items-center justify-between">
+			<div class="flex items-center gap-2">
+				<Database class="h-5 w-5 text-cyan-400" />
+				<h2 class="text-base font-bold text-slate-100">Deployed Projects</h2>
+			</div>
+			<span class="text-xs text-slate-500">{projects.length} monitored</span>
 		</div>
-		<span class="text-xs text-slate-500">{projects.length} monitored</span>
+
+		{#if loading && projects.length === 0}
+			<div class="space-y-3">
+				{#each Array(3) as _}
+					<div class="skeleton h-12 w-full"></div>
+				{/each}
+			</div>
+		{:else if projects.length === 0}
+			<div class="py-10 text-center text-slate-500">
+				No projects configured.
+			</div>
+		{:else}
+			<div class="table-scroll">
+				<table class="w-full text-sm">
+					<thead class="text-xs uppercase tracking-wide text-slate-400">
+						<tr class="border-b border-slate-800/60">
+							<th class="px-4 py-3 text-left">Project</th>
+							<th class="px-4 py-3 text-left">Status</th>
+							<th class="px-4 py-3 text-left">Gatekeeper</th>
+							<th class="px-4 py-3 text-left">Visits</th>
+							<th class="px-4 py-3 text-left">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each projects as p (p.id)}
+							<ProjectRow
+								project={p}
+								columns={5}
+								onChanged={() => loadAll(false)}
+								onDeployStart={(id) => (selectedProjectId = id)}
+							/>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
 	</div>
 
-	{#if loading && projects.length === 0}
-		<div class="space-y-3">
-			{#each Array(3) as _}
-				<div class="skeleton h-12 w-full"></div>
-			{/each}
-		</div>
-	{:else if projects.length === 0}
-		<div class="py-10 text-center text-slate-500">
-			No projects configured.
-		</div>
-	{:else}
-		<div class="table-scroll">
-			<table class="w-full text-sm">
-				<thead class="text-xs uppercase tracking-wide text-slate-400">
-					<tr class="border-b border-slate-800/60">
-						<th class="px-4 py-3 text-left">Project</th>
-						<th class="px-4 py-3 text-left">Status</th>
-						<th class="px-4 py-3 text-left">Gatekeeper</th>
-						<th class="px-4 py-3 text-left">Visits</th>
-						<th class="px-4 py-3 text-left">Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each projects as p (p.id)}
-						<ProjectRow project={p} columns={5} onChanged={() => loadAll(false)} />
-					{/each}
-				</tbody>
-			</table>
-		</div>
-	{/if}
+	<div class="lg:col-span-1">
+		<BuildProgress
+			projects={projects}
+			selectedId={selectedProjectId}
+			onselect={(id) => (selectedProjectId = id)}
+		/>
+	</div>
 </section>
