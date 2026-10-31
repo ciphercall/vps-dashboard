@@ -13,8 +13,11 @@ endpoints** of the existing on-demand gatekeepers — nothing in those projects 
 - **Projects table** — live awake/asleep status, gatekeeper state, Deploy / Teardown controls
   (with confirmation), auto-refresh every 10 s.
 - **Visitor analytics** — expandable per-project row with a nested paginated visit table
-  (timestamp, IP, country flag, country, path, user agent) plus today / 7-day summaries and
-  top countries.
+  (timestamp, IP with local/proxy labeling, country flag, country, path, user agent) plus
+  today / 7-day summaries and top countries.
+- **Build / deploy progress** — right-side panel streaming a project's readiness to become
+  browsable (Vercel-style timestamped log, progress bar, browsable yes/no) via the gatekeeper
+  SSE endpoint.
 
 ## Stack
 

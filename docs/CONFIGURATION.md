@@ -73,7 +73,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
 | `gatekeeper` | object | no | Presence enables Deploy/Teardown controls |
 | `gatekeeper.baseUrl` | string (URL) | yes* | Base URL of the gatekeeper (usually the public URL) |
 | `gatekeeper.adminToken` | string | yes* | Sent as `X-Admin-Token` / `?token=` |
-| `logSources` | string[] | no | Absolute paths (inside container, e.g. `/host/log/...`) to access logs to tail |
+| `logSources` | string[] | no | Absolute paths (inside container, e.g. `/host/log/...`) to access logs to tail (CLF/combined; append `$http_x_forwarded_for` to capture real visitor IPs) |
 
 \* required when `gatekeeper` is present.
 

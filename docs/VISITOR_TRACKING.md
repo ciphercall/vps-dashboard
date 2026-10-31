@@ -47,6 +47,19 @@ Common Log Format (CLF) and Combined Log Format:
 Parsed fields: IP, timestamp, request (method + path + protocol), status code, user agent.
 Malformed lines are skipped (counted, not fatal).
 
+## Real visitor IPs (X-Forwarded-For)
+
+Access logs behind a reverse proxy / Docker network usually record the proxy address
+(e.g. `172.19.0.1`) as `remote_addr`. To capture the real client IP:
+
+1. Configure the project's nginx access log to append the forwarded-for value, e.g.
+   `log_format ... '$remote_addr ... "$http_x_forwarded_for"';`
+2. The tailer detects a private/proxy `remote_addr` and, when a trailing quoted field
+   contains an `X-Forwarded-For` value, stores the first token instead.
+3. IPs that are still private (no XFF available) are labeled "local" in the UI.
+
+Historical rows are not backfilled.
+
 ## Ingestion cadence
 
 - Tailer runs every **30 seconds** (singleton started in `hooks.server.ts`).
