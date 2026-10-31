@@ -63,6 +63,15 @@ export async function deploy(
   return (data ?? {}) as GatekeeperStatus;
 }
 
+export async function redeploy(
+  baseUrl: string,
+  adminToken?: string,
+  timeoutMs = 300000
+): Promise<GatekeeperStatus> {
+  const data = await request(baseUrl, '/_ondemand/redeploy', 'POST', adminToken, timeoutMs);
+  return (data ?? {}) as GatekeeperStatus;
+}
+
 export async function teardown(
   baseUrl: string,
   adminToken?: string,
@@ -91,6 +100,10 @@ export class GatekeeperClient {
     return deploy(this.baseUrl, this.adminToken, timeoutMs ?? 300000);
   }
 
+  redeploy(timeoutMs?: number): Promise<GatekeeperStatus> {
+    return redeploy(this.baseUrl, this.adminToken, timeoutMs ?? 300000);
+  }
+
   teardown(timeoutMs?: number): Promise<GatekeeperStatus> {
     return teardown(this.baseUrl, this.adminToken, timeoutMs ?? 120000);
   }
@@ -109,4 +122,5 @@ export function alwaysOnState(): string {
 export const getGatekeeperStatus = getStatus;
 export const deployGatekeeper = deploy;
 export const teardownGatekeeper = teardown;
-export default { getStatus, getGatekeeperStatus, deploy, deployGatekeeper, teardown, teardownGatekeeper, GatekeeperClient, createGatekeeperClient, alwaysOnState };
+export const redeployGatekeeper = redeploy;
+export default { getStatus, getGatekeeperStatus, deploy, deployGatekeeper, redeploy, redeployGatekeeper, teardown, teardownGatekeeper, GatekeeperClient, createGatekeeperClient, alwaysOnState };
