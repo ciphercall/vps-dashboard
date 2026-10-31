@@ -33,7 +33,7 @@
 	let visitsPageSize = $state(10);
 	let visitsTotal = $state(0);
 	let summary = $state<any>(null);
-	let actionLoading = $state<'deploy' | 'teardown' | null>(null);
+	let actionLoading = $state<'deploy' | 'teardown' | 'redeploy' | null>(null);
 	let confirmTeardown = $state(false);
 	let error = $state<string | null>(null);
 
@@ -84,6 +84,21 @@
 			onChanged?.();
 		} catch (e) {
 			error = (e as Error)?.message ?? 'Deploy failed';
+		} finally {
+			actionLoading = null;
+		}
+	}
+
+	async function doRedeploy() {
+		actionLoading = 'redeploy';
+		error = null;
+		try {
+			onDeployStart?.(project.id);
+			const res = await fetch(`/api/projects/${encodeURIComponent(project.id)}/redeploy`, { method: 'POST' });
+			if (!res.ok) throw new Error(await res.text());
+			onChanged?.();
+		} catch (e) {
+			error = (e as Error)?.message ?? 'Redeploy failed';
 		} finally {
 			actionLoading = null;
 		}
@@ -141,7 +156,7 @@
 	<td class="px-4 py-3">
 		<StatusBadge status={project.status ?? 'unknown'} />
 	</td>
-	<td class="px-4 py-3">
+	<td class="px-4 py-3" title={project.gatekeeper?.message ?? ''}>
 		<StatusBadge status={gatekeeperLabel} pulse={gatekeeperState === 'warming'} />
 	</td>
 	<td class="px-4 py-3 text-sm text-slate-300">
@@ -167,6 +182,19 @@
 				{/if}
 				Deploy
 			</button>
+			{#if gatekeeperState === 'ready'}
+				<button
+					type="button"
+					class="btn btn-ghost btn-sm"
+					disabled={actionLoading !== null}
+					onclick={doRedeploy}
+				>
+					{#if actionLoading === 'redeploy'}
+						<span class="animate-spin-slow inline-block h-3 w-3 rounded-full border-2 border-slate-400 border-t-transparent"></span>
+					{/if}
+					Redeploy
+				</button>
+			{/if}
 			<button
 				type="button"
 				class="btn btn-danger btn-sm"

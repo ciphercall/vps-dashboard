@@ -85,6 +85,7 @@
 	const diskPercent = $derived(
 		metrics?.disk?.[0]?.percent ?? metrics?.fs?.percent ?? 0
 	);
+	const redeploying = $derived(projects.filter((p: any) => (p.gatekeeper?.state ?? '').toLowerCase() === 'warming' && String(p.gatekeeper?.message ?? '').toLowerCase().includes('redeploy')));
 
 	function formatUptime(sec?: number) {
 		if (!sec) return '—';
@@ -256,6 +257,12 @@
 			</div>
 			<span class="text-xs text-slate-500">{projects.length} monitored</span>
 		</div>
+
+		{#if redeploying.length > 0}
+			<div class="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-300">
+				Redeploying: {redeploying.map((p:any)=>p.name).join(', ')}…
+			</div>
+		{/if}
 
 		{#if loading && projects.length === 0}
 			<div class="space-y-3">
