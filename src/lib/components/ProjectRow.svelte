@@ -1,6 +1,7 @@
 <script lang="ts">
 	import StatusBadge from './StatusBadge.svelte';
 	import CountryFlag from './CountryFlag.svelte';
+	import { isPrivateIp } from '$lib/ip';
 	interface Project {
 		id: string;
 		name: string;
@@ -21,8 +22,9 @@
 		project: Project;
 		columns?: number;
 		onChanged?: () => void;
+		onDeployStart?: (id: string) => void;
 	}
-	let { project, columns = 6, onChanged }: Props = $props();
+	let { project, columns = 6, onChanged, onDeployStart }: Props = $props();
 
 	let expanded = $state(false);
 	let visits = $state<any[]>([]);
@@ -76,6 +78,7 @@
 		actionLoading = 'deploy';
 		error = null;
 		try {
+			onDeployStart?.(project.id);
 			const res = await fetch(`/api/projects/${encodeURIComponent(project.id)}/deploy`, { method: 'POST' });
 			if (!res.ok) throw new Error(await res.text());
 			onChanged?.();
@@ -230,7 +233,12 @@
 										<td class="px-3 py-2 text-xs text-slate-400 whitespace-nowrap">
 											{new Date(v.ts ?? v.timestamp ?? Date.now()).toLocaleString()}
 										</td>
-										<td class="px-3 py-2 font-mono text-xs text-slate-300">{v.ip}</td>
+										<td class="px-3 py-2 font-mono text-xs text-slate-300">
+											{v.ip}
+											{#if isPrivateIp(v.ip)}
+												<span class="ml-1 inline-flex items-center rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-amber-300 ring-1 ring-amber-500/30" title="Local/proxy address (Docker or LAN). Configure the project nginx to log $http_x_forwarded_for to capture real visitor IPs.">local</span>
+											{/if}
+										</td>
 										<td class="px-3 py-2">
 											<span class="inline-flex items-center gap-1.5">
 												<CountryFlag code={v.country_code ?? v.countryCode} name={v.country_name ?? v.countryName} size={14} />
@@ -246,6 +254,10 @@
 						</tbody>
 					</table>
 				</div>
+
+				{#if visits.length > 0 && visits.every((v) => isPrivateIp(v.ip))}
+					<p class="text-xs text-slate-500">All IPs above are local/proxy addresses. To capture real visitor IPs, configure the project's nginx access log to include $http_x_forwarded_for (see docs/VISITOR_TRACKING.md).</p>
+				{/if}
 
 				{#if visitsTotal > visitsPageSize}
 					<div class="flex items-center justify-between text-xs text-slate-400">

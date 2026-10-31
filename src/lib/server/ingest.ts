@@ -1,3 +1,4 @@
+import { isPrivateIp, firstForwardedIp } from '../ip.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { getDb, insertVisits, getLogState, setLogState } from './db.js';
@@ -72,7 +73,7 @@ function parseLogDate(s: string): number {
 
 // Common/combined log format parser.
 const LOG_RE =
-  /^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d{3})\s+(\S+)(?:\s+"([^"]*)"\s+"([^"]*)")?/;
+  /^(\S+)\s+\S+\s+\S+\s+\[([^\]]+)\]\s+"([^"]*)"\s+(\d{3})\s+(\S+)(?:\s+"([^"]*)"\s+"([^"]*)")?(?:\s+"([^"]*)")?/;
 
 interface ParsedLine {
   ip: string;
@@ -86,11 +87,13 @@ interface ParsedLine {
 function parseLine(line: string): ParsedLine | null {
   const m = line.match(LOG_RE);
   if (!m) return null;
-  const ip = m[1];
+  let ip = m[1];
   const ts = parseLogDate(m[2]);
   const request = m[3];
   const status = parseInt(m[4], 10);
   const ua = m[7] ?? null;
+  const xff = m[8] ?? null;
+  if (isPrivateIp(ip) && xff && xff !== '-') { const real = firstForwardedIp(xff); if (real) ip = real; }
   let method = '';
   let p = request;
   const parts = request.split(' ');
