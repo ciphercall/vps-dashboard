@@ -10,14 +10,14 @@ endpoints** of the existing on-demand gatekeepers — nothing in those projects 
 - **VPS config panel** — hostname, IP, OS, CPU cores, RAM, disk, region, provider, Docker
   version, container count, uptime.
 - **Animated gauges** — CPU, memory, disk with green/amber/red thresholds.
-- **Projects table** — live awake/asleep status, gatekeeper state, Deploy / Teardown controls
-  (with confirmation), auto-refresh every 10 s.
+- **Projects table** — live awake/asleep status, gatekeeper state, Deploy / Teardown / Redeploy
+  controls (with confirmation), auto-refresh every 10 s.
 - **Visitor analytics** — expandable per-project row with a nested paginated visit table
   (timestamp, IP with local/proxy labeling, country flag, country, path, user agent) plus
   today / 7-day summaries and top countries.
 - **Build / deploy progress** — right-side panel streaming a project's readiness to become
   browsable (Vercel-style timestamped log, progress bar, browsable yes/no) via the gatekeeper
-  SSE endpoint.
+  SSE endpoint; also shows redeploy progress.
 
 ## Stack
 
@@ -76,7 +76,8 @@ Projects are declared in `config/projects.json` (no code change needed to add/re
 ## Notes
 
 - Gatekeeper instances are never modified; only their public endpoints
-  (`/_ondemand/status`, `/_ondemand/deploy`, `/_ondemand/teardown`) are called with the admin
-  token.
+  (`/_ondemand/status`, `/_ondemand/deploy`, `/_ondemand/redeploy`, `/_ondemand/teardown`) are
+  called with the admin token. Auto-redeploy is surfaced via the gatekeeper's rebuild-stamp
+  polling (no dashboard env vars needed).
 - No HTTPS initially; front with Cloudflare Tunnel or nginx + Let's Encrypt later.
 - Single operator; no multi-user/RBAC in v1.

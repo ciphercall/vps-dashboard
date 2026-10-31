@@ -100,3 +100,9 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
 The gatekeeper admin token is shared across instances in the current VPS setup
 (`vps-admin-token-change-me`). For a new gatekeeper instance, set `ADMIN_TOKEN` in that
 instance's `.env` and mirror it in `config/projects.json`.
+
+## Redeploy
+
+No new environment variables are required — the dashboard proxies redeploy through
+`POST /api/projects/:id/redeploy` → gatekeeper `POST /_ondemand/redeploy` using the
+existing admin token. Redeploy tears down then deploys and streams progress over SSE.

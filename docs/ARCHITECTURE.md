@@ -8,6 +8,7 @@ Browser ──► dashboard (Node, :8030, host network)
             ├─ GET  /api/vps             → /etc/os-release, hostname, ip, uptime, docker version
             ├─ GET  /api/projects        → config/projects.json + live status + gatekeeper state
             ├─ POST /api/projects/:id/deploy    → POST gatekeeper /_ondemand/deploy (admin token)
+            ├─ POST /api/projects/:id/redeploy  → POST gatekeeper /_ondemand/redeploy (admin token)
             ├─ POST /api/projects/:id/teardown  → POST gatekeeper /_ondemand/teardown
             ├─ GET  /api/projects/:id/events     → SSE proxy to gatekeeper /_ondemand/events
             ├─ GET  /api/projects/:id/visits    → SQLite (paginated)
@@ -35,8 +36,8 @@ is edited.
 ## Frontend (`src/lib/components/`)
 
 - `Gauge.svelte` — animated SVG arc gauge (CSS `stroke-dashoffset` transitions, color thresholds)
-- `ProjectRow.svelte` — expandable row + nested visits table (IPs labeled local/proxy when private)
-- `BuildProgress.svelte` — right-side build/deploy progress panel driven by gatekeeper SSE
+- `ProjectRow.svelte` — expandable row + nested visits table (IPs labeled local/proxy when private); includes a Redeploy button
+- `BuildProgress.svelte` — right-side build/deploy progress panel driven by gatekeeper SSE (also shows redeploy progress)
 - `StatusBadge.svelte` — awake / asleep / unknown / n/a badge
 - `CountryFlag.svelte` — flag from `country-flag-icons`
 
@@ -88,6 +89,7 @@ Log rotation is detected by inode / size shrink and resets the offset. See
 
 - `GET  {baseUrl}/_ondemand/status` → `{ state, message, lastActivity, idleTimeoutMs, ... }`
 - `POST {baseUrl}/_ondemand/deploy`
+- `POST {baseUrl}/_ondemand/redeploy`
 - `POST {baseUrl}/_ondemand/teardown`
 
 For projects without a gatekeeper (e.g. DropshipBD) the state is reported as
