@@ -19,7 +19,13 @@ RUN npm run build
 
 FROM node:20-alpine AS runtime
 WORKDIR /app
-RUN apk add --no-cache libc6-compat \
+# `docker-cli` is a runtime dependency, not a build convenience: the VPS panel
+# shells out to `docker version` / `docker ps` for the Docker version and the
+# container count, and speaks to the host daemon through the mounted
+# /var/run/docker.sock. Without the binary both calls fail and the panel reports
+# DOCKER `unavailable` and CONTAINERS `0` on a host that is actually running
+# twenty containers. Only the client is installed — there is no daemon here.
+RUN apk add --no-cache libc6-compat docker-cli \
 	&& mkdir -p /data
 ENV NODE_ENV=production
 COPY --from=build /app/build ./build
