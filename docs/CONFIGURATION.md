@@ -49,7 +49,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
     ]
   },
   {
-    "id": "ai-invoice-po-matching",
+    "id": "ai-invoice",
     "name": "AI Invoice PO Matching",
     "publicUrl": "http://169.58.90.13:5174",
     "healthUrl": "http://127.0.0.1:8080/up",
@@ -58,9 +58,31 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
       "adminToken": "vps-admin-token-change-me"
     },
     "logSources": []
+  },
+  {
+    "id": "studio-web",
+    "name": "Studio (company profile)",
+    "publicUrl": "http://169.58.90.13:8027",
+    "healthUrl": "http://127.0.0.1:8028/api/health",
+    "gatekeeper": {
+      "baseUrl": "http://127.0.0.1:8027",
+      "adminToken": "vps-admin-token-change-me"
+    },
+    "logSources": [
+      "/host/github/studio-web/deploy/logs/access.log"
+    ]
   }
 ]
 ```
+
+A project's `healthUrl` must point at the service's **internal (loopback) port**, not its
+public gatekeeper port. The public port belongs to the gatekeeper, which keeps answering
+there while the stack is asleep — it returns its warming page with HTTP 200 — so polling it
+would make the dashboard report `awake` for a sleeping project. For example, `studio-web`
+is served publicly on the gatekeeper port `:8027` but its health is probed on the
+loopback-only internal port `:8028/api/health`, the same split `gazi-portfolio` uses
+(`:8023` public / `:8026` health). This works because the dashboard container runs with
+`network_mode: host`, so `127.0.0.1` is the host itself.
 
 ### Field reference
 

@@ -24,7 +24,7 @@ SESSION_SECRET=<random 32+ chars>
 NODE_ENV=production
 PORT=8030
 VPS_IP=169.58.90.13
-PROJECTS_CONFIG=/app/config/projects.json
+PROJECTS_CONFIG=/host/github/vps-dashboard/config/projects.json
 DB_PATH=/data/dashboard.db
 HOST_PROC=/host/proc
 HOST_SYS=/host/sys
@@ -74,7 +74,7 @@ services:
       - ADMIN_USER=${ADMIN_USER}
       - ADMIN_PASS=${ADMIN_PASS}
       - SESSION_SECRET=${SESSION_SECRET}
-      - PROJECTS_CONFIG=/app/config/projects.json
+      - PROJECTS_CONFIG=/host/github/vps-dashboard/config/projects.json
       - DB_PATH=/data/dashboard.db
     volumes:
       - /proc:/host/proc:ro
@@ -114,28 +114,41 @@ docker ps --format '{{.Names}}'
 Update `config/projects.json` `logSources` accordingly, commit, push (CI redeploys) or run
 the deploy script manually.
 
+For Docker-based targets, bind-mount the log out to a host directory instead of pointing at
+`/var/lib/docker/containers/<id>/<id>-json.log`: the container id — and therefore that path —
+changes every time a deploy recreates the container, so the `logSources` entry would silently
+go stale. Export it from the service's compose file instead, e.g.
+`/opt/github/<project>/deploy/logs:/var/log/nginx`, and reference the host side as
+`/host/github/<project>/deploy/logs/access.log` (visible thanks to the
+`/opt/github:/host/github:ro` mount).
+
 ## CI/CD (GitHub Actions)
 
 `.github/workflows/deploy.yml`:
 
 ```yaml
-name: deploy
+name: Deploy VPS Dashboard
+
 on:
   push:
     branches: [main]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Deploy to VPS
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: /opt/deploy-vps-dashboard.sh
+          script: |
+            /opt/deploy-vps-dashboard.sh
 ```
+
+The workflow does no `actions/checkout` — it only SSHes into the VPS and runs
+`/opt/deploy-vps-dashboard.sh`, which performs the `git pull` and compose rebuild there.
 
 Secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` are already configured in the other repos.
 
