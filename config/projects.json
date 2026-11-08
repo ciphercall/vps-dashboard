@@ -35,5 +35,18 @@
       "adminToken": "vps-admin-token-change-me"
     },
     "logSources": []
+  },
+  {
+    "id": "studio-web",
+    "name": "Studio (company profile)",
+    "publicUrl": "http://169.58.90.13:8027",
+    "healthUrl": "http://127.0.0.1:8028/api/health",
+    "gatekeeper": {
+      "baseUrl": "http://127.0.0.1:8027",
+      "adminToken": "vps-admin-token-change-me"
+    },
+    "logSources": [
+      "/host/github/studio-web/deploy/logs/access.log"
+    ]
   }
 ]
