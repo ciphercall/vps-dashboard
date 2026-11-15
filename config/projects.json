@@ -2,7 +2,7 @@
   {
     "id": "gazi-portfolio",
     "name": "Gazi Portfolio",
-    "publicUrl": "http://169.58.90.13:8023",
+    "publicUrl": "https://gazi.ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8026/api/health",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:8023",
@@ -15,7 +15,7 @@
   {
     "id": "dropshipbd",
     "name": "DropshipBD",
-    "publicUrl": "http://169.58.90.13:8024",
+    "publicUrl": "https://dropship.ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8025/api/v1/health",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:8024",
@@ -28,7 +28,7 @@
   {
     "id": "ai-invoice",
     "name": "AI Invoice PO Matching",
-    "publicUrl": "http://169.58.90.13:5174",
+    "publicUrl": "https://invoice.ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8080/up",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:5174",
@@ -39,7 +39,7 @@
   {
     "id": "studio-web",
     "name": "Studio (company profile)",
-    "publicUrl": "http://169.58.90.13:8027",
+    "publicUrl": "https://ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8028/api/health",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:8027",

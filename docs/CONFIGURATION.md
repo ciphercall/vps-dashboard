@@ -1,4 +1,4 @@
-# Configuration
+﻿# Configuration
 
 ## Environment variables
 
@@ -6,11 +6,11 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `ADMIN_USER` | yes | — | Login username |
-| `ADMIN_PASS` | yes | — | Login password |
-| `SESSION_SECRET` | yes | — | 32+ char secret used to sign the session cookie |
+| `ADMIN_USER` | yes | â€” | Login username |
+| `ADMIN_PASS` | yes | â€” | Login password |
+| `SESSION_SECRET` | yes | â€” | 32+ char secret used to sign the session cookie |
 | `PORT` | no | `3000` | Listen port (`8030` on the VPS) |
-| `NODE_ENV` | no | — | Set to `production` in deploy |
+| `NODE_ENV` | no | â€” | Set to `production` in deploy |
 | `HOST_PROC` | no | `/proc` | Path to host `/proc` |
 | `HOST_SYS` | no | `/sys` | Path to host `/sys` |
 | `HOST_FS` | no | `/` | Host filesystem root for disk stats |
@@ -25,7 +25,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
   {
     "id": "gazi-portfolio",
     "name": "Gazi Portfolio",
-    "publicUrl": "http://169.58.90.13:8023",
+    "publicUrl": "https://gazi.ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8026/api/health",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:8023",
@@ -38,7 +38,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
   {
     "id": "dropshipbd",
     "name": "DropshipBD",
-    "publicUrl": "http://169.58.90.13:8024",
+    "publicUrl": "https://dropship.ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8025/api/v1/health",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:8024",
@@ -51,7 +51,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
   {
     "id": "ai-invoice",
     "name": "AI Invoice PO Matching",
-    "publicUrl": "http://169.58.90.13:5174",
+    "publicUrl": "https://invoice.ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8080/up",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:5174",
@@ -62,7 +62,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
   {
     "id": "studio-web",
     "name": "Studio (company profile)",
-    "publicUrl": "http://169.58.90.13:8027",
+    "publicUrl": "https://ciphercall.dev",
     "healthUrl": "http://127.0.0.1:8028/api/health",
     "gatekeeper": {
       "baseUrl": "http://127.0.0.1:8027",
@@ -77,7 +77,7 @@ All runtime configuration comes from the environment (`.env` in `deploy/` on the
 
 A project's `healthUrl` must point at the service's **internal (loopback) port**, not its
 public gatekeeper port. The public port belongs to the gatekeeper, which keeps answering
-there while the stack is asleep — it returns its warming page with HTTP 200 — so polling it
+there while the stack is asleep â€” it returns its warming page with HTTP 200 â€” so polling it
 would make the dashboard report `awake` for a sleeping project. For example, `studio-web`
 is served publicly on the gatekeeper port `:8027` but its health is probed on the
 loopback-only internal port `:8028/api/health`, the same split `gazi-portfolio` uses
@@ -101,10 +101,10 @@ loopback-only internal port `:8028/api/health`, the same split `gazi-portfolio` 
 
 ### Status semantics
 
-- `awake` — `healthUrl` returns HTTP 200.
-- `asleep` — `healthUrl` non-200 or connection refused while a gatekeeper exists.
-- `unknown` — no health URL response and no gatekeeper (or error).
-- Gatekeeper state: `GET {baseUrl}/_ondemand/status` → `{ state, message, lastActivity,
+- `awake` â€” `healthUrl` returns HTTP 200.
+- `asleep` â€” `healthUrl` non-200 or connection refused while a gatekeeper exists.
+- `unknown` â€” no health URL response and no gatekeeper (or error).
+- Gatekeeper state: `GET {baseUrl}/_ondemand/status` â†’ `{ state, message, lastActivity,
   idleTimeoutMs, ... }`. For projects without a gatekeeper, reported as `n/a (always-on)`.
 
 ## Adding a project
@@ -115,7 +115,7 @@ loopback-only internal port `:8028/api/health`, the same split `gazi-portfolio` 
 3. For gatekeeper-controlled projects, set `gatekeeper.baseUrl` and `adminToken`.
 4. Add any access-log paths to `logSources` (paths must be visible under a host mount, e.g.
    `/host/log/...`).
-5. Redeploy (or restart) — config is read at startup and on each poll.
+5. Redeploy (or restart) â€” config is read at startup and on each poll.
 
 ## Admin token
 
@@ -125,6 +125,6 @@ instance's `.env` and mirror it in `config/projects.json`.
 
 ## Redeploy
 
-No new environment variables are required — the dashboard proxies redeploy through
-`POST /api/projects/:id/redeploy` → gatekeeper `POST /_ondemand/redeploy` using the
+No new environment variables are required â€” the dashboard proxies redeploy through
+`POST /api/projects/:id/redeploy` â†’ gatekeeper `POST /_ondemand/redeploy` using the
 existing admin token. Redeploy tears down then deploys and streams progress over SSE.

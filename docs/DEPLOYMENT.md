@@ -1,4 +1,4 @@
-# Deployment
+﻿# Deployment
 
 ## VPS target
 
@@ -51,7 +51,7 @@ chmod +x /opt/deploy-vps-dashboard.sh
 
 # 6. Verify
 curl -s http://127.0.0.1:8030/healthz
-curl -I http://169.58.90.13:8030/
+curl -I https://dashboard.ciphercall.dev/
 docker ps --format '{{.Names}} {{.Status}}' | grep vps-dashboard
 ```
 
@@ -115,7 +115,7 @@ Update `config/projects.json` `logSources` accordingly, commit, push (CI redeplo
 the deploy script manually.
 
 For Docker-based targets, bind-mount the log out to a host directory instead of pointing at
-`/var/lib/docker/containers/<id>/<id>-json.log`: the container id — and therefore that path —
+`/var/lib/docker/containers/<id>/<id>-json.log`: the container id â€” and therefore that path â€”
 changes every time a deploy recreates the container, so the `logSources` entry would silently
 go stale. Export it from the service's compose file instead, e.g.
 `/opt/github/<project>/deploy/logs:/var/log/nginx`, and reference the host side as
@@ -147,7 +147,7 @@ jobs:
             /opt/deploy-vps-dashboard.sh
 ```
 
-The workflow does no `actions/checkout` — it only SSHes into the VPS and runs
+The workflow does no `actions/checkout` â€” it only SSHes into the VPS and runs
 `/opt/deploy-vps-dashboard.sh`, which performs the `git pull` and compose rebuild there.
 
 Secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` are already configured in the other repos.
@@ -155,8 +155,8 @@ Secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` are already configured in the othe
 ## Health check
 
 ```bash
-curl -s http://127.0.0.1:8030/healthz   # → 200
-curl -I http://169.58.90.13:8030/       # → 200 (login page)
+curl -s http://127.0.0.1:8030/healthz   # â†’ 200
+curl -I https://dashboard.ciphercall.dev/       # â†’ 200 (login page)
 ```
 
 ## Rollback
@@ -173,17 +173,25 @@ image rebuilds.
 
 ## HTTPS
 
-No TLS initially. Options:
-- Cloudflare Tunnel pointing at `http://127.0.0.1:8030`.
-- nginx reverse proxy with Let's Encrypt in front of port 8030.
+Served at **`https://dashboard.ciphercall.dev`** through the `ciphercall-vps`
+Cloudflare Tunnel (TLS at the edge, `127.0.0.1:8030` as the origin). The hostname
+is behind a Cloudflare Access application (email OTP, 24h session), so the login
+page is not reachable from the open internet.
+
+Tunnel ingress and DNS live in `universal_tunnel_deployment/vps/`; see
+[`VPS_DEPLOYMENT.md`](../../VPS_DEPLOYMENT.md#domain--https-ciphercalldev).
+
+`publicUrl` values in `config/projects.json` point at the public hostnames, while
+`gatekeeper.baseUrl` and `healthUrl` stay on loopback â€” the dashboard must never
+call its own projects through Cloudflare.
 
 ## Verifying gatekeepers still work
 
 After deploy, confirm the on-demand flow is untouched:
 
 ```bash
-curl -s http://169.58.90.13:8023/_ondemand/status
-curl -s http://169.58.90.13:5174/_ondemand/status
+curl -s https://gazi.ciphercall.dev/_ondemand/status
+curl -s https://invoice.ciphercall.dev/_ondemand/status
 ```
 
 Test a cold start of gazi-portfolio and idle teardown; the dashboard only calls public

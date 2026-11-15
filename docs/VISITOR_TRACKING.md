@@ -1,4 +1,4 @@
-# Visitor Tracking
+﻿# Visitor Tracking
 
 ## Overview
 
@@ -32,7 +32,7 @@ CREATE TABLE log_state (
 
 ## Log sources
 
-Configured per project in `config/projects.json` → `logSources` (array of absolute paths
+Configured per project in `config/projects.json` â†’ `logSources` (array of absolute paths
 inside the container, e.g. `/host/log/nginx/access.log`). The host mount `/var/log:/host/log:ro`
 makes host logs visible.
 
@@ -70,7 +70,7 @@ Historical rows are not backfilled.
 ## Log rotation handling
 
 On each tick the tailer `stat`s the file:
-- If size shrank or inode changed → reset offset to 0 and re-read from start.
+- If size shrank or inode changed â†’ reset offset to 0 and re-read from start.
 - Otherwise read `[offset, size)`.
 
 ## Geo lookup
@@ -80,7 +80,7 @@ IP-geolocation grade. Unknown IPs yield null country (flag omitted in UI).
 
 ## UI
 
-Project row expands → nested paginated table:
+Project row expands â†’ nested paginated table:
 
 | Column | Source |
 |---|---|
@@ -98,7 +98,7 @@ Plus summary: visits today, visits last 7 days, top countries.
 For projects that opt in, send a beacon:
 
 ```js
-fetch('http://169.58.90.13:8030/api/track', {
+fetch('https://dashboard.ciphercall.dev/api/track', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -109,7 +109,7 @@ fetch('http://169.58.90.13:8030/api/track', {
 });
 ```
 
-The endpoint inserts a visit row with the caller's IP and resolved country. Use sparingly —
+The endpoint inserts a visit row with the caller's IP and resolved country. Use sparingly â€”
 log tailing is the primary source.
 
 ## Empty state
