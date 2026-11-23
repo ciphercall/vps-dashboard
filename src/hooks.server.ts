@@ -5,6 +5,7 @@ import {
 	verifySessionToken,
 } from '$lib/server/auth';
 import { startIngestScheduler } from '$lib/server/ingest';
+import { startMaintenanceScheduler } from '$lib/server/maintenance';
 
 declare global {
 	namespace App {
@@ -34,8 +35,20 @@ function startIngestOnce(): void {
 	}
 }
 
+let maintenanceStarted = false;
+function startMaintenanceOnce(): void {
+	if (maintenanceStarted) return;
+	maintenanceStarted = true;
+	try {
+		startMaintenanceScheduler();
+	} catch {
+		// ignore
+	}
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
 	startIngestOnce();
+	startMaintenanceOnce();
 
 	const path = event.url.pathname;
 

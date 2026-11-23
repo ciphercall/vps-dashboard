@@ -29,8 +29,27 @@
 		fs?: { used?: number; total?: number; percent?: number };
 	};
 
+	type Storage = {
+		disk?: {
+			mount?: string;
+			sizeBytes?: number;
+			usedBytes?: number;
+			availableBytes?: number;
+			usedPercent?: number;
+		} | null;
+		hardFloorBytes?: number;
+		belowFloor?: boolean | null;
+		janitor?: {
+			present?: boolean;
+			lastRun?: { timestamp?: string; reclaimedBytes?: number } | null;
+			recent?: string[];
+		};
+		visits?: { total?: number; retentionDays?: number };
+	};
+
 	let vps = $state<VpsInfo | null>(null);
 	let metrics = $state<Metrics | null>(null);
+	let storage = $state<Storage | null>(null);
 	let projects = $state<any[]>([]);
 	let selectedProjectId = $state<string | null>(null);
 
@@ -44,13 +63,19 @@
 		refreshing = true;
 		error = null;
 		try {
-			const [vRes, mRes, pRes] = await Promise.all([
+			const [vRes, mRes, pRes, sRes] = await Promise.all([
 				fetch('/api/vps'),
 				fetch('/api/metrics'),
-				fetch('/api/projects')
+				fetch('/api/projects'),
+				fetch('/api/storage')
 			]);
 			if (vRes.ok) vps = await vRes.json();
 			if (mRes.ok) metrics = await mRes.json();
+			// Storage is a guardrail, not a dependency: a failure must not block
+			// the rest of the dashboard.
+			if (sRes.ok) {
+				try { storage = await sRes.json(); } catch { storage = null; }
+			}
 			if (pRes.ok) {
 				const data = await pRes.json();
 				projects = Array.isArray(data) ? data : (data.projects ?? data.items ?? []);
@@ -246,6 +271,59 @@
 		{/if}
 	</div>
 </section>
+
+<!-- Storage guardrails: free space, what the janitor last reclaimed, visits size -->
+{#if storage?.disk}
+	<section class="mb-6 glass rounded-2xl p-5">
+		<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+			<div class="flex items-center gap-2">
+				<HardDrive class="h-5 w-5 text-cyan-400" />
+				<h2 class="text-base font-bold text-slate-100">Storage</h2>
+			</div>
+			{#if storage.belowFloor}
+				<span class="rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-medium text-red-300">
+					Low disk — below {formatBytes(storage.hardFloorBytes)} free
+				</span>
+			{:else}
+				<span class="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-300">
+					Healthy
+				</span>
+			{/if}
+		</div>
+		<div class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+			<div>
+				<dt class="text-xs uppercase tracking-wide text-slate-500">Free</dt>
+				<dd class="font-mono text-slate-200">{formatBytes(storage.disk.availableBytes)}</dd>
+			</div>
+			<div>
+				<dt class="text-xs uppercase tracking-wide text-slate-500">Used</dt>
+				<dd class="font-mono text-slate-200">
+					{formatBytes(storage.disk.usedBytes)} / {formatBytes(storage.disk.sizeBytes)}
+					<span class="text-slate-500">({(storage.disk.usedPercent ?? 0).toFixed(0)}%)</span>
+				</dd>
+			</div>
+			<div>
+				<dt class="text-xs uppercase tracking-wide text-slate-500">Last janitor pass</dt>
+				<dd class="text-slate-200">
+					{#if storage.janitor?.lastRun}
+						reclaimed {formatBytes(storage.janitor.lastRun.reclaimedBytes)}
+					{:else}
+						<span class="text-slate-500">no pass recorded</span>
+					{/if}
+				</dd>
+			</div>
+			<div>
+				<dt class="text-xs uppercase tracking-wide text-slate-500">Visits rows</dt>
+				<dd class="text-slate-200">
+					{(storage.visits?.total ?? 0).toLocaleString()}
+					<span class="text-slate-500">
+						{storage.visits?.retentionDays ? `(keep ${storage.visits.retentionDays}d)` : '(retention off)'}
+					</span>
+				</dd>
+			</div>
+		</div>
+	</section>
+{/if}
 
 <!-- Projects + build progress -->
 <section class="grid grid-cols-1 gap-4 lg:grid-cols-3">

@@ -209,6 +209,61 @@ export function getAllLogStates(): LogState[] {
   }));
 }
 
+/**
+ * Retention for the visits table.
+ *
+ * Every request to a monitored site is one row here, forever, and the file lives
+ * on the same 100 GB disk as everything else. The UI only ever counts `today`
+ * (24 h) and `last7d` (getVisitSummary); older pages simply page back through
+ * history, so trimming at a fixed window costs no feature.
+ *
+ * A retention of 0 means "count only" - the dry run. Callers should ship that
+ * default first and enable a window after seeing how many rows it would delete.
+ */
+export function countVisitsBefore(cutoffMs: number): number {
+  const db = getDb();
+  const r = db.prepare('SELECT COUNT(*) AS c FROM visits WHERE ts < ?').get(cutoffMs) as any;
+  return r?.c ?? 0;
+}
+
+export function pruneVisits(cutoffMs: number): number {
+  const db = getDb();
+  const before = (db.prepare('SELECT COUNT(*) AS c FROM visits').get() as any)?.c ?? 0;
+  db.prepare('DELETE FROM visits WHERE ts < ?').run(cutoffMs);
+  // Let SQLite update its planner statistics after a bulk delete.
+  try { db.pragma('optimize'); } catch { /* not fatal */ }
+  const after = (db.prepare('SELECT COUNT(*) AS c FROM visits').get() as any)?.c ?? 0;
+  return before - after;
+}
+
+/**
+ * VACUUM cannot run inside a transaction and rewrites the whole file, so it is
+ * only worth doing after a delete actually returned pages to the free list, and
+ * at most once a week.
+ */
+export function vacuumVisits(lastVacuumMs: number): boolean {
+  const db = getDb();
+  if (Date.now() - lastVacuumMs < 7 * 24 * 60 * 60 * 1000) return false;
+  try {
+    db.exec('VACUUM');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function getVisitStats(): { total: number; oldest: number | null; newest: number | null } {
+  const db = getDb();
+  const r = db
+    .prepare('SELECT COUNT(*) AS c, MIN(ts) AS oldest, MAX(ts) AS newest FROM visits')
+    .get() as any;
+  return {
+    total: r?.c ?? 0,
+    oldest: r?.oldest ?? null,
+    newest: r?.newest ?? null,
+  };
+}
+
 function rowToVisit(r: any): Visit {
   return {
     id: r.id,
