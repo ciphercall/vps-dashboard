@@ -18,6 +18,8 @@ endpoints** of the existing on-demand gatekeepers — nothing in those projects 
 - **Build / deploy progress** — right-side panel streaming a project's readiness to become
   browsable (Vercel-style timestamped log, progress bar, browsable yes/no) via the gatekeeper
   SSE endpoint; also shows redeploy progress.
+- **Storage guardrails** — free/used space on the root filesystem, what the host janitor last
+  reclaimed, and the visits row count, with a red badge below 12 GiB free (`GET /api/storage`).
 
 ## Stack
 
@@ -59,6 +61,7 @@ PORT=8030 node build/index.js
 | `VPS_IP` | no | `169.58.90.13` | Displayed VPS IP (never guessed) |
 | `PROJECTS_CONFIG` | no | `config/projects.json` | Path to monitored projects config |
 | `DB_PATH` | no | `./data/dashboard.db` | SQLite database file |
+| `VISITS_RETENTION_DAYS` | no | `0` | `0` = dry run (log what would be pruned); `90` = keep 90 days |
 
 ## Monitored projects
 

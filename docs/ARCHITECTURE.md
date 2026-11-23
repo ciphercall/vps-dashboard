@@ -31,6 +31,7 @@ is edited.
 | `docker.ts` | `docker ps` / stats via `child_process` |
 | `gatekeeper.ts` | Status / deploy / teardown HTTP client |
 | `ingest.ts` | Log tailer + `geoip-lite` country lookup |
+| `maintenance.ts` | Nightly visits retention (`VISITS_RETENTION_DAYS`) + periodic `VACUUM` |
 | `projects.ts` | Load + validate `config/projects.json` |
 
 ## Frontend (`src/lib/components/`)
@@ -65,9 +66,22 @@ containerised process can observe the host:
 4. `/logout` clears the cookie.
 
 ## Metrics caching
-
 `metrics.ts` samples every 5 s and keeps the last sample in memory; API requests return the
 cached sample and trigger a background refresh. This keeps API p95 under 100 ms.
+
+## Visits retention
+
+`GET /api/storage` and the page's **Storage** strip expose free space, the last janitor pass and
+the visits row count. The retention job itself is `maintenance.ts`, started once from
+`hooks.server.ts` beside the ingest scheduler.
+
+| Env | Default | Meaning |
+|---|---|---|
+| `VISITS_RETENTION_DAYS` | `0` | `0` = dry run: log how many rows *would* be pruned at 90 days. `N > 0` = delete rows older than N days nightly. |
+| `MAINTENANCE_INTERVAL_MS` | `86400000` | How often the job runs. |
+
+`VACUUM` is attempted only after a prune that actually removed rows, and never more than once a
+week. Nothing here can delete a row while `VISITS_RETENTION_DAYS=0`.
 
 Memory is reported as **active** memory (`total − available`), not cache-inclusive `used`.
 On Linux `used = total − free` includes OS page cache/buffers, which the kernel keeps after
