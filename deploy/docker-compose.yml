@@ -26,5 +26,12 @@ services:
       - /var/log:/host/log:ro
       - /opt/github:/host/github:ro
       - dashboard-data:/data
+    # The only other always-on process: without a cap its json log would sit on
+    # the same disk everything else has to fit in.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 volumes:
   dashboard-data:
